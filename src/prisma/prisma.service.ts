@@ -13,7 +13,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit{
             connectionString
         })
         const adapter = new PrismaPg(pool)
-
         super({
             adapter,
             log:["error","warn"]
@@ -29,4 +28,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit{
        }
     }
 }
+
+
+
 
