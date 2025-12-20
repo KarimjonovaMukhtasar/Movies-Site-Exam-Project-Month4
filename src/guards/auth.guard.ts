@@ -5,24 +5,17 @@ import { JwtService } from "@nestjs/jwt";
 export class AuthGuard implements CanActivate{
     constructor(private jwtService: JwtService){}
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const ctx = context.switchToHttp()
-        const req = ctx.getRequest()
-        const res = ctx.getResponse()
-        const next = ctx.getNext()
-        if(!req.headers.authorization){
-             throw new UnauthorizedException()
-        }
-        const token = req.headers.authorization.split(' ')[1] 
-        const type = req.headers.authorization.split(' ')[0]
-        if(type !== "Bearer" || token === undefined){
-            throw new UnauthorizedException()
+        const req = context.switchToHttp().getRequest()
+        const token = req.cookies?.refresh_token
+        if(!token){
+            throw new UnauthorizedException(`YOU HAVE NOT BEEN AUTHORIZED YET!`)
         }
         try {
-            const checkToken = await this.jwtService.verify(token, {secret: process.env.ACCESS_SECRET})
-            req.user = checkToken
-               return true
+            const payload = await this.jwtService.verify(token, {secret: process.env.JWT_REFRESH_SECRET})
+            req.user = payload
+            return true
         } catch (error) {
-             throw new UnauthorizedException()
+            throw new UnauthorizedException(`INVALID OR EXPIRED TOKEN!`)
         }
     }
 }

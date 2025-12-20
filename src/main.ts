@@ -2,10 +2,13 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
+import  cookieParser from "cookie-parser"
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
   app.setGlobalPrefix("api/v1");
+  app.use(cookieParser())
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: false,
@@ -18,6 +21,7 @@ async function bootstrap() {
     .setDescription("Amazing site to watch movies")
     .setVersion("1.0")
     .addBearerAuth()
+    .addCookieAuth('access_token')
     .addCookieAuth('access_token')
     .build();
 

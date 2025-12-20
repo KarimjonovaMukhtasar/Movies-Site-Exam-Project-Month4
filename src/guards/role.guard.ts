@@ -7,8 +7,6 @@ export class RoleGuard implements CanActivate{
     async canActivate(context: ExecutionContext): Promise<boolean>  {
         const ctx = context.switchToHttp()
         const req = ctx.getRequest()
-
-        
         const roles = this.reflector.get("roles", context.getHandler())
         if(!roles.includes(req.user.role)){
             throw new ForbiddenException()
