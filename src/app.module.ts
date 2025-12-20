@@ -14,6 +14,7 @@ import { ConfigService } from "@nestjs/config";
 import { ConfigModule } from "@nestjs/config";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./modules/redis/redis.module";
+// import { RedisModule } from '@liaoliaots/nestjs-redis';
 
 @Module({
   imports: [
@@ -37,7 +38,15 @@ import { RedisModule } from "./modules/redis/redis.module";
         api_key: configService.get("API_KEY"),
         api_secret: configService.get("API_SECRET")
       })
-    })
+    }),
+    // RedisModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => ({
+    //     config: {
+    //       url: configService.get<string>('REDIS_URL'),
+    //     },
+    //   })}),
   ],
   controllers: [AppController],
   providers: [AppService]
