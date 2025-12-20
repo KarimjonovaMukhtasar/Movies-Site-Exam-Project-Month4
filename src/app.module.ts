@@ -39,14 +39,9 @@ import { RedisModule } from "./modules/redis/redis.module";
         api_secret: configService.get("API_SECRET")
       })
     }),
-    // RedisModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService) => ({
-    //     config: {
-    //       url: configService.get<string>('REDIS_URL'),
-    //     },
-    //   })}),
+    CloudinaryModule.forRoot({
+  cloudinary_url: process.env.CLOUDINARY_URL,
+})
   ],
   controllers: [AppController],
   providers: [AppService]
