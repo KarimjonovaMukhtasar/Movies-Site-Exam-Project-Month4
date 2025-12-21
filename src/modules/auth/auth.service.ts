@@ -2,7 +2,8 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  NotFoundException
+  NotFoundException,
+  UnauthorizedException
 } from "@nestjs/common";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
@@ -15,6 +16,7 @@ import * as otpGenerator from "otp-generator";
 import type { Response } from "express";
 import { RedisService } from "../redis/redis.service";
 import { OtpDto } from "./dto/otp.dto";
+import { resendDto } from "./dto/resend.dto";
 
 @Injectable()
 export class AuthService {
@@ -68,7 +70,7 @@ export class AuthService {
         where: { email: loginDto.email },
         include: { user_subscriptions: { include: { plan: true } } }
       });
-      if (!checkUser){
+      if (!checkUser) {
         throw new NotFoundException("THIS USER HAS NOT REGISTERED YET!");
       }
       const password = loginDto.password_hash;
@@ -113,55 +115,134 @@ export class AuthService {
     }
   }
 
-  async verify(Otp: OtpDto, res: Response){
-    const {email, otp} = Otp
-    const checkOtp = await this.redisService.get(email)
-    if(!checkOtp){
-      return {success: false, 
-            message: `THIS OTP DOESNOT EXIST OR EXPIRED, RETRY WITH LOGIN AGAIN`
-      }
+  async verify(Otp: OtpDto, res: Response) {
+    const { email, otp } = Otp;
+    const checkOtp = await this.redisService.get(email);
+    if (!checkOtp) {
+      return {
+        success: false,
+        message: `THIS OTP DOESNOT EXIST OR EXPIRED, RETRY WITH LOGIN AGAIN`
+      };
     }
-    if(checkOtp !== otp){
+    if (checkOtp !== otp) {
       return {
         success: false,
         message: `INVALID OTP!`
-      }
+      };
     }
-      const newUser = await this.prisma.users.findUnique({where: {email}})
-      if(!newUser) throw new BadRequestException(`THIS EMAIL NOT FOUND!`)
-        const user = await this.prisma.users.update({where: {id: newUser.id}, data: {...newUser, status: 'active' }})
-      await this.redisService.del(email)
-       const accessToken = await this.jwtService.signAsync(
-        { id: user.id, role: user.role, email: user.email },
-        {
-          secret: process.env.JWT_ACCESS_SECRET,
-          expiresIn: "7d"
-        }
-      );
-      const refreshToken = await this.jwtService.signAsync(
-        { id: user.id, role: user.role, email: user.email },
-        {
-          secret: process.env.JWT_ACCESS_SECRET,
-          expiresIn: "30d"
-        }
-      );
-      res.cookie("access_token", accessToken, {
-        httpOnly: true,
-        sameSite: "strict"
-      });
-      res.cookie("refresh_token", refreshToken, {
-        httpOnly: true,
-        sameSite: "strict"
-      }); 
-      return {
-        success: true,
-        message: `SUCCESSFULLY VERIFIED THE OTP!`,
-        tokens: {
-          accessToken, refreshToken
-        }
+    const newUser = await this.prisma.users.findUnique({ where: { email } });
+    if (!newUser) throw new BadRequestException(`THIS EMAIL NOT FOUND!`);
+    const user = await this.prisma.users.update({
+      where: { id: newUser.id },
+      data: { ...newUser, status: "active" }
+    });
+    await this.redisService.del(email);
+    const accessToken = await this.jwtService.signAsync(
+      { id: user.id, role: user.role, email: user.email },
+      {
+        secret: process.env.JWT_ACCESS_SECRET,
+        expiresIn: "7d"
       }
-    }
-
-    // async refresh('refre')
+    );
+    const refreshToken = await this.jwtService.signAsync(
+      { id: user.id, role: user.role, email: user.email },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: "30d"
+      }
+    );
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      sameSite: "strict"
+    });
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      sameSite: "strict"
+    });
+    return {
+      success: true,
+      message: `SUCCESSFULLY VERIFIED THE OTP!`,
+      tokens: {
+        accessToken,
+        refreshToken
+      }
+    };
   }
 
+  async resendOtp(payload: resendDto, res: Response) {
+    const {email} = payload
+    const user = await this.prisma.users.findUnique({ where: { email } });
+    if (!user) throw new BadRequestException(`THIS EMAIL NOT FOUND!`);
+    if (user.status === "active")
+      throw new BadRequestException(`THIS USER HAS ALREADY BEEN VERIFIED`);
+    const newOtp = await otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false
+    });
+    await this.mailerService.sendEmail(
+      user.email,
+      "OTP FOR VERIFICATION",
+      newOtp
+    );
+    await this.redisService.del(user.email);
+    await this.redisService.set(user.email, newOtp, 600);
+    return {
+      success: true,
+      message: `SUCCESSFULLY SENT THE NEW OTP TO THE EMAIL!`
+    };
+  }
+
+  async refresh(req: Request, res: Response) {
+    const refresh_token = req["cookies"].refresh_token;
+    if (!refresh_token) {
+      throw new UnauthorizedException("YOU HAVE NOT BEEN AUTHORIZED YET!");
+    }
+    let payload: any;
+    try {
+      payload = await this.jwtService.verifyAsync(refresh_token, {
+        secret: process.env.JWT_REFRESH_SECRET
+      });
+    } catch (error) {
+      throw new UnauthorizedException("REFRESH TOKEN IS INVALID OR EXPIRED");
+    }
+    const user = await this.prisma.users.findUnique({
+      where: { id: payload.id }
+    });
+
+    if (!user) {
+      throw new NotFoundException("THIS USER CANNOT BE FOUND!");
+    }
+    const accessToken = await this.jwtService.signAsync(
+      { id: user.id, role: user.role, email: user.email },
+      {
+        secret: process.env.JWT_ACCESS_SECRET,
+        expiresIn: "7d"
+      }
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      { id: user.id, role: user.role, email: user.email },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: "30d"
+      }
+    );
+
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      sameSite: "strict"
+    });
+
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      sameSite: "strict"
+    });
+
+    return {
+      success: true,
+      message: "SUCCESSFULLY REFRESHED THE TOKENS!",
+      tokens: {accessToken, refreshToken}
+    };
+  }
+}
