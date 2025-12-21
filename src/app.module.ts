@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./modules/auth/auth.module";
-// import { ProfileModule } from "./modules/profile/profile.module";
+import { ProfileModule } from "./modules/profile/profile.module";
 import { SubscriptionModule } from "./modules/subscription/subscription.module";
 import { MoviesModule } from "./modules/movies/movies.module";
 import { FavoritesModule } from "./modules/favorites/favorites.module";
@@ -14,12 +14,12 @@ import { ConfigService } from "@nestjs/config";
 import { ConfigModule } from "@nestjs/config";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./modules/redis/redis.module";
-// import { RedisModule } from '@liaoliaots/nestjs-redis';
+
 
 @Module({
   imports: [
     AuthModule,
-    // ProfileModule,
+    ProfileModule,
     RedisModule,
     SubscriptionModule,
     MoviesModule,
