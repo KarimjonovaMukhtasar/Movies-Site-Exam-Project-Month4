@@ -7,28 +7,29 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
-  @Post()
-  create(@Body() createMovieDto: CreateMovieDto) {
-    return this.moviesService.create(createMovieDto);
-  }
+  // @Post()
+  // create(@Body() createMovieDto: CreateMovieDto) {
+  //   return this.moviesService.create(createMovieDto);
+  // }
+  
+  // @Get()
+  // //  - Query params: `page=1&limit=20&category=action&search=qasoskorlar&subscription_type=free`
+  // findAll() {
+  //   return this.moviesService.findAll();
+  // }
 
-  @Get()
-  findAll() {
-    return this.moviesService.findAll();
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.moviesService.findOne();
+  // }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.moviesService.findOne(+id);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
+  //   return this.moviesService.update(, updateMovieDto);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
-    return this.moviesService.update(+id, updateMovieDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.moviesService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.moviesService.remove();
+  // }
 }

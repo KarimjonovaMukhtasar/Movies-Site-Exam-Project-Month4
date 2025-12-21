@@ -3,7 +3,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./modules/auth/auth.module";
 import { ProfileModule } from "./modules/profile/profile.module";
-import { SubscriptionModule } from "./modules/subscription/subscription.module";
+import { SubscriptionModule } from "./modules/subscription-plan/subscription-plan.module";
 import { MoviesModule } from "./modules/movies/movies.module";
 import { FavoritesModule } from "./modules/favorites/favorites.module";
 import { ReviewsModule } from "./modules/reviews/reviews.module";
