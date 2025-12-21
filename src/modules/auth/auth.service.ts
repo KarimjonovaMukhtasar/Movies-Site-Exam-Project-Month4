@@ -245,4 +245,38 @@ export class AuthService {
       tokens: {accessToken, refreshToken}
     };
   }
+
+  async logout(req: Request, res: Response) {
+    const refresh_token = req["cookies"].refresh_token;
+    if (!refresh_token) {
+      throw new UnauthorizedException("YOU HAVE NOT BEEN AUTHORIZED YET!");
+    }
+    let payload: any;
+    try {
+      payload = await this.jwtService.verifyAsync(refresh_token, {
+        secret: process.env.JWT_REFRESH_SECRET
+      });
+    } catch (error) {
+      throw new UnauthorizedException("REFRESH TOKEN IS INVALID OR EXPIRED");
+    }
+    const user = await this.prisma.users.findUnique({
+      where: { id: payload.id }
+    });
+    if (!user) {
+      throw new NotFoundException("THIS USER CANNOT BE FOUND!");
+    }
+    await this.prisma.users.update({where: {id: user.id}, data: {status: 'inactive'} })
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: "strict"
+ })
+   res.clearCookie('refresh_token', {
+      httpOnly: true,
+      sameSite: "strict"
+ })
+    return {
+      success: true, 
+      message: `SUCCESSFULLY LOGGED OUT!`
+    }
+  }
 }

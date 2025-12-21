@@ -22,7 +22,7 @@ import { AuthGuard } from "src/guards/auth.guard";
 import { resendDto } from "./dto/resend.dto";
 
 @ApiTags("Auth")
-@Controller("Auth")
+@Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -69,5 +69,12 @@ export class AuthController {
   @Post('refresh')
   refresh(@Req() req: Request, @Res({passthrough:true}) res: Response){
     return this.authService.refresh(req, res)
+  }
+
+  @ApiOperation({ summary: " {USER, ADMIN, SUPERADMIN}" })
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  logout(@Req() req: Request, @Res({passthrough:true}) res: Response){
+    return this.authService.logout(req, res)
   }
 }
