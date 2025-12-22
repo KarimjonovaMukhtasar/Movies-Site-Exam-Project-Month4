@@ -73,7 +73,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: " {USER, ADMIN, SUPERADMIN}" })
-   @ApiSecurity('cookie-auth-key')
+  @ApiSecurity('cookie-auth-key')
   @UseGuards(AuthGuard)
   @Post('logout')
   logout(@Req() req: Request, @Res({passthrough:true}) res: Response){

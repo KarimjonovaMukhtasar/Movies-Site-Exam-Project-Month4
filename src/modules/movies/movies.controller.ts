@@ -23,6 +23,7 @@ export class MoviesController {
   @ApiOperation({ summary: "{ USER, ADMIN, SUPERADMIN}" })
   @ApiQuery({ name: "page", required: false, type: Number })
   @ApiQuery({ name: "limit", required: false, type: Number })
+  @ApiQuery({ name: "search", required: false, type: Number })
   @ApiQuery({ name: "category", required: false, type: String })
   @ApiQuery({ name: "subscription_type", required: false, type: String })
   @Get("plans")

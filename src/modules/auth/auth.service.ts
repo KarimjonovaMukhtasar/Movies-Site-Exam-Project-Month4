@@ -32,7 +32,6 @@ export class AuthService {
       const checkDuplicate = await this.prisma.users.findUnique({
         where: { email: registerDto.email, username: registerDto.username }
       });
-      console.log(checkDuplicate);
       if (checkDuplicate) {
         throw new ConflictException(
           "THIS EMAIL OR USERNAME HAS ALREADY REGISTERED!"
