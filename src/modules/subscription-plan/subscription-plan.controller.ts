@@ -37,10 +37,9 @@ export class SubscriptionPlanController {
   @ApiSecurity('cookie-auth-key')
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: "{ USER, ADMIN, SUPERADMIN}" })
-  
- @ApiQuery({ name: "page", required: false, type: Number })
- @ApiQuery({ name: "limit", required: false, type: Number })
- @ApiQuery({ name: "search", required: false, type: String })
+  @ApiQuery({ name: "page", required: false, type: Number })
+  @ApiQuery({ name: "limit", required: false, type: Number })
+  @ApiQuery({ name: "search", required: false, type: String })
   @Get("plans")
   findAll(@Query("page") page?: number,
   @Query("limit") limit?: number,

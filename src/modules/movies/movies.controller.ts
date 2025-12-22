@@ -1,35 +1,50 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { MoviesService } from './movies.service';
-import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  Req
+} from "@nestjs/common";
+import { MoviesService } from "./movies.service";
+import { ApiOperation, ApiQuery, ApiSecurity } from "@nestjs/swagger";
+import { AuthGuard } from "src/guards/auth.guard";
 
-@Controller('movies')
+@Controller("movies")
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
-  // @Post()
-  // create(@Body() createMovieDto: CreateMovieDto) {
-  //   return this.moviesService.create(createMovieDto);
-  // }
-  
-  // @Get()
-  // //  - Query params: `page=1&limit=20&category=action&search=qasoskorlar&subscription_type=free`
-  // findAll() {
-  //   return this.moviesService.findAll();
-  // }
+  @ApiSecurity("cookie-auth-key")
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: "{ USER, ADMIN, SUPERADMIN}" })
+  @ApiQuery({ name: "page", required: false, type: Number })
+  @ApiQuery({ name: "limit", required: false, type: Number })
+  @ApiQuery({ name: "category", required: false, type: String })
+  @ApiQuery({ name: "subscription_type", required: false, type: String })
+  @Get("plans")
+  findAll(
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
+    @Query("search") search?: string,
+    @Query("category") category?: string,
+    @Query("subscription_type") subscription_type?: string
+  ) {
+    return this.moviesService.findAll(
+      page,
+      limit,
+      search,
+      category,
+      subscription_type
+    );
+  }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.moviesService.findOne();
-  // }
+  @Get(":slug")
+  findOne(@Param("slug") slug: string, @Req() req: Request) {
+    return this.moviesService.findOne(slug, req);
+  }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
-  //   return this.moviesService.update(, updateMovieDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.moviesService.remove();
-  // }
 }
