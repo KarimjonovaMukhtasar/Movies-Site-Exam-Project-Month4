@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import { Transform } from "class-transformer";
 import {
+  IsArray,
   IsBoolean,
   IsDecimal,
   IsEnum,
@@ -33,20 +34,20 @@ export class CreateSubscriptionDto {
     required: true,
     example: "['SD sifatli kinolar', 'Reklama bilan']"
   })
-  @IsJSON()
+  @IsArray()
   @IsNotEmpty()
-  features: JSON;
+  features: string[];
 
 
-  @ApiProperty({ type: "boolean", required: false, example: "true" })
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => (value === "" ? undefined : value))
-  is_active: Boolean;
+  // @ApiProperty({ type: "boolean", required: false, example: "true" })
+  // @IsBoolean()
+  // @IsOptional()
+  // @Transform(({ value }) => (value === "" ? undefined : value))
+  // is_active: Boolean;
 
-  @ApiProperty({  required: false, example: "active" })
-  @IsEnum(Status)
-  @IsOptional()
-  @Transform(({ value }) => (value === "" ? undefined : value))
-  status: Status;
+  // @ApiProperty({  required: false, example: "active" })
+  // @IsEnum(Status)
+  // @IsOptional()
+  // @Transform(({ value }) => (value === "" ? undefined : value))
+  // status: Status;
 }

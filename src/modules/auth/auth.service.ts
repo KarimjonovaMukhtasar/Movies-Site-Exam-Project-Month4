@@ -170,7 +170,7 @@ export class AuthService {
   }
 
   async resendOtp(payload: resendDto, res: Response) {
-    const {email} = payload
+    const { email } = payload;
     const user = await this.prisma.users.findUnique({ where: { email } });
     if (!user) throw new BadRequestException(`THIS EMAIL NOT FOUND!`);
     if (user.status === "active")
@@ -242,7 +242,7 @@ export class AuthService {
     return {
       success: true,
       message: "SUCCESSFULLY REFRESHED THE TOKENS!",
-      tokens: {accessToken, refreshToken}
+      tokens: { accessToken, refreshToken }
     };
   }
 
@@ -265,18 +265,21 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException("THIS USER CANNOT BE FOUND!");
     }
-    await this.prisma.users.update({where: {id: user.id}, data: {status: 'inactive'} })
-    res.clearCookie('access_token', {
+    await this.prisma.users.update({
+      where: { id: user.id },
+      data: { status: "inactive" }
+    });
+    res.clearCookie("access_token", {
       httpOnly: true,
       sameSite: "strict"
- })
-   res.clearCookie('refresh_token', {
+    });
+    res.clearCookie("refresh_token", {
       httpOnly: true,
       sameSite: "strict"
- })
+    });
     return {
-      success: true, 
+      success: true,
       message: `SUCCESSFULLY LOGGED OUT!`
-    }
+    };
   }
 }

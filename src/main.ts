@@ -21,14 +21,21 @@ async function bootstrap() {
     .setDescription("Amazing site to watch movies")
     .setVersion("1.0")
     .addBearerAuth()
-    .addCookieAuth('access_token')
-    .addCookieAuth('access_token')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'accessToken',
+        in: 'cookie',
+      },
+      'cookie-auth-key',
+    )
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("swagger", app, documentFactory, {
     swaggerOptions: {
-      persistAuthorization: true
+      persistAuthorization: true,
+      withCredentials: true
     }
   });
 

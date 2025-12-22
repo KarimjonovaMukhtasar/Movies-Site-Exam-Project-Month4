@@ -3,18 +3,15 @@ import { PaymentMethod, Status } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
   IsBoolean,
-  IsDecimal,
   IsEnum,
-  IsJSON,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   IsUUID
 } from "class-validator";
-import { Matches, Length } from 'class-validator';
-import { ValidateNested } from 'class-validator';
 
+import { Matches, Length } from "class-validator";
+import { ValidateNested } from "class-validator";
 
 export class CardDetailsDto {
   @IsString()
@@ -31,22 +28,34 @@ export class CardDetailsDto {
 }
 
 export class PaymentDto {
-  @ApiProperty({ type: "string", required: true,})
+  @ApiProperty({
+    type: "string",
+    required: true,
+    example: "550e8400-e29b-41d4-a716-446655440002"
+  })
   @IsUUID()
   @IsNotEmpty()
   plan_id: string;
 
-  @ApiProperty({  required: false, example: "card" })
+  @ApiProperty({ required: false, example: "card" })
   @IsEnum(PaymentMethod)
   @IsNotEmpty()
   payment_method: PaymentMethod;
 
-  @ApiProperty({type: 'array', required: true, example: 'card_number: '})
+  @ApiProperty({
+    type: "array",
+    required: true,
+    example: {
+      card_number: "4242XXXXXXXX4242",
+      expiry: "04/26",
+      card_holder: "Ali Valiyev"
+    }
+  })
   @ValidateNested()
   @Type(() => CardDetailsDto)
   payment_details: CardDetailsDto;
 
-  @ApiProperty({type: 'boolean', required: false, example: "true"})
+  @ApiProperty({ type: "boolean", required: false, example: "true" })
   @IsBoolean()
   @IsOptional()
   @Transform(({ value }) => (value === "" ? undefined : value))

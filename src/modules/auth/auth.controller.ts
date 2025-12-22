@@ -14,7 +14,7 @@ import type { Request as ExpressRequest , Response} from "express";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
-import {  ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {  ApiConsumes, ApiOperation, ApiSecurity, ApiTags } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import multer from "multer";
 import { OtpDto } from "./dto/otp.dto";
@@ -65,6 +65,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: " {USER, ADMIN, SUPERADMIN}" })
+    @ApiSecurity('cookie-auth-key')
   @UseGuards(AuthGuard)
   @Post('refresh')
   refresh(@Req() req: Request, @Res({passthrough:true}) res: Response){
@@ -72,6 +73,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: " {USER, ADMIN, SUPERADMIN}" })
+   @ApiSecurity('cookie-auth-key')
   @UseGuards(AuthGuard)
   @Post('logout')
   logout(@Req() req: Request, @Res({passthrough:true}) res: Response){
