@@ -41,6 +41,7 @@ export class MoviesService {
         some: { name: category }
       };
     }
+    where.status = 'active'
     const [data, total] = await Promise.all([
       this.prisma.movies.findMany({
         where,

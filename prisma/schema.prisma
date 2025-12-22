@@ -45,12 +45,11 @@ enum SubscriptionType {
 }
 
 enum Quality {
-  RES_240p  @map("240p")
-  RES_360p  @map("360p")
-  RES_480p  @map("480p")
-  RES_720p  @map("720p")
-  RES_1080p @map("1080p")
-  RES_4K    @map("4K")
+  p240
+  p360
+  p720
+  p1080
+  k4
 }
 
 enum Languages {
@@ -153,7 +152,6 @@ model Categories {
   status      Status @default(active)
 
   movie_categories Movie_categories[]
-
   @@map("categories")
 }
 
@@ -168,7 +166,7 @@ model Movies {
   rating            Decimal          @db.Decimal(3, 1)
   subscription_type SubscriptionType   @default(free)
   view_count        Int              @default(0)
-  created_by        String           @unique
+  created_by        String         
   created_at        DateTime         @default(now()) @db.Timestamptz(6)
   updated_at        DateTime         @updatedAt @db.Timestamptz(6)
   status            Status           @default(active)

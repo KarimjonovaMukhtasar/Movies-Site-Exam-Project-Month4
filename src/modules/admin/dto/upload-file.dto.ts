@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Languages, Quality, Status } from "@prisma/client";
+import { Transform } from "class-transformer";
 import { IsEnum, IsNotEmpty } from "class-validator";
 
 export class UploadFileDto {
@@ -11,17 +12,17 @@ export class UploadFileDto {
   })
   file_url: string;
 
-  @ApiProperty({ type: "string", required: true, example: "240p" })
-  @IsEnum(Quality)
+  @ApiProperty({ type: "string", example: "p240" })
+  @IsEnum(Quality) 
   @IsNotEmpty()
   quality: Quality;
 
-  @ApiProperty({ type: "string", required: true, example: "en" })
+  @ApiProperty({ enum: Languages, required: true, example: "en" })
   @IsEnum(Languages)
   @IsNotEmpty()
   language: Languages;
 
-  @ApiProperty({ type: "string", required: true, example: "active" })
+  @ApiProperty({ enum: Status, required: true, example: "active" })
   @IsEnum(Status)
   @IsNotEmpty()
   status: Status;

@@ -1,13 +1,20 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException
+} from "@nestjs/common";
 import { CreateMovieDto } from "./dto/create-movie.dto";
 import { UpdateMovieDto } from "./dto/update-movie.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UploadFileDto } from "./dto/upload-file.dto";
 import { CloudinaryService } from "nestjs-cloudinary";
+import { Quality } from "@prisma/client";
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService, 
+  constructor(
+    private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService
   ) {}
   async findAll(page?: number, limit?: number, search?: string) {
@@ -25,6 +32,7 @@ export class AdminService {
       if (search) {
         where.title = { contains: search, mode: "insensitive" };
       }
+      where.status = "active";
       const [data, total] = await Promise.all([
         this.prisma.movies.findMany({
           where,
@@ -55,16 +63,32 @@ export class AdminService {
     createMovieDto: CreateMovieDto
   ) {
     try {
-      const created_by = req['user'].id
-      const slug = createMovieDto.title.replace(" ", "-").toLowerCase()
-      const checkDuplicate = await this.prisma.movies.findUnique({where: {slug}})
-      if(checkDuplicate){
-        throw new ConflictException(`THIS MOVIE ALREADY EXISTS IN THE DATABASE!`)
+      const created_by = req["user"].id;
+      const slug = createMovieDto.title
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w\-]+/g, "")
+        .replace(/\-\-+/g, "-");
+      const checkDuplicate = await this.prisma.movies.findUnique({
+        where: { slug }
+      });
+      if (checkDuplicate) {
+        throw new ConflictException(
+          `THIS MOVIE ALREADY EXISTS IN THE DATABASE!`
+        );
       }
-      const posterUrl = (await this.cloudinary.uploadFile(poster_url)).url
-      const newMovie = await this.prisma.movies.create({data: {...createMovieDto, slug, poster_url: posterUrl, created_by,  user: {
-      connect: { id: created_by }
-    }  }})
+      const posterUrl = (await this.cloudinary.uploadFile(poster_url)).url;
+      const newMovie = await this.prisma.movies.create({
+        data: {
+          ...createMovieDto,
+          slug,
+          poster_url: posterUrl,
+          user: {
+            connect: { id: created_by }
+          }
+        }
+      });
       return {
         success: true,
         message: "Yangi kino muvaffaqiyatli qo'shildi",
@@ -80,81 +104,116 @@ export class AdminService {
     }
   }
 
-
   async update(
     movie_id: string,
     updateMovieDto: UpdateMovieDto,
     poster_url: Express.Multer.File
   ) {
     try {
-        const movie = await this.prisma.movies.findUnique({where: {id: movie_id}})
-        if(!movie){
-          throw new NotFoundException(`THIS MOVIE ID CANNOT BE FOUND FROM THE DATABASE!`)
-        }
-        if(updateMovieDto.title){
-          const checkTitle = await this.prisma.movies.findFirst({where: {title: updateMovieDto.title}})
-          if(checkTitle) throw new ConflictException(`THIS TITLE HAS ALREADY BEEN CHOSEN!`)
-        }
-      if(poster_url){
-        updateMovieDto.poster_url = (await this.cloudinary.uploadFile(poster_url)).url
+      const movie = await this.prisma.movies.findUnique({
+        where: { id: movie_id }
+      });
+      if (!movie) {
+        throw new NotFoundException(
+          `THIS MOVIE ID CANNOT BE FOUND FROM THE DATABASE!`
+        );
       }
-      const updatedMovie = await this.prisma.movies.update({where: {id: movie_id}, data: {...updateMovieDto}})
+      if (updateMovieDto.title) {
+        const checkTitle = await this.prisma.movies.findFirst({
+          where: { title: updateMovieDto.title }
+        });
+        if (checkTitle)
+          throw new ConflictException(`THIS TITLE HAS ALREADY BEEN CHOSEN!`);
+      }
+      if (poster_url) {
+        updateMovieDto.poster_url = (
+          await this.cloudinary.uploadFile(poster_url)
+        ).url;
+      }
+      const updatedMovie = await this.prisma.movies.update({
+        where: { id: movie_id },
+        data: { ...updateMovieDto }
+      });
       return {
-       success: true,
-       message: "Kino muvaffaqiyatli yangilandi",
-       data: {
-         id: updatedMovie.id,
-         title: updatedMovie.title,
-         updated_at: updatedMovie.updated_at
-       }
-     }
+        success: true,
+        message: "Kino muvaffaqiyatli yangilandi",
+        data: {
+          id: updatedMovie.id,
+          title: updatedMovie.title,
+          updated_at: updatedMovie.updated_at
+        }
+      };
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
   async remove(movie_id: string) {
     try {
-        const movie = await this.prisma.movies.findUnique({where: {id: movie_id}})
-        if(!movie){
-          throw new NotFoundException(`THIS MOVIE ID CANNOT BE FOUND FROM THE DATABASE!`)
-        }
-        await this.prisma.movies.delete({where: {id: movie_id}})
-        return {
-      success: true,
-       message: "Kino muvaffaqiyatli o'chirildi"
-     }
+      const movie = await this.prisma.movies.findUnique({
+        where: { id: movie_id }
+      });
+      if (!movie) {
+        throw new NotFoundException(
+          `THIS MOVIE ID CANNOT BE FOUND FROM THE DATABASE!`
+        );
+      }
+      await this.prisma.movies.update({
+        where: { id: movie_id },
+        data: { status: "inactive" }
+      });
+      return {
+        success: true,
+        message: "Kino muvaffaqiyatli o'chirildi"
+      };
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
- async uploadFile(
+  async uploadFile(
     movie_id: string,
     file_url: Express.Multer.File,
     uploadFile: UploadFileDto
   ) {
-     try {
-        const movie = await this.prisma.movies.findUnique({where: {id: movie_id}})
-        if(!movie){
-          throw new NotFoundException(`THIS MOVIE ID CANNOT BE FOUND FROM THE DATABASE!`)
+    try {
+      const movie = await this.prisma.movies.findUnique({
+        where: { id: movie_id }
+      });
+      if (!movie) {
+        throw new NotFoundException(
+          `THIS MOVIE ID CANNOT BE FOUND FROM THE DATABASE!`
+        );
+      }
+      const fileUrl = (
+        await this.cloudinary.uploadFile(file_url, {
+          resource_type: "auto",
+          folder: "movies"
+        })
+      ).secure_url;
+      uploadFile.file_url = fileUrl;
+      const newFile = await this.prisma.movie_files.create({
+        data: {
+          file_url: uploadFile.file_url,
+          quality: uploadFile.quality,
+          language: uploadFile.language,
+          status: uploadFile.status,
+          movies: { connect: { id: movie_id } }
         }
-      const fileUrl = (await this.cloudinary.uploadFile(file_url)).url
-      uploadFile.file_url = fileUrl
-      const newFile = await this.prisma.movie_files.create({ data: {...uploadFile, movies: {connect: {id: movie_id}}} })
+      });
       return {
-       success: true,
-       message: "Kino fayli muvaffaqiyatli yuklandi",
-       data: {
-         id: newFile.id,
-         movie_id: newFile.movie_id,
-         quality: newFile.quality,
-         language: newFile.language,
-         file_url: newFile.file_url
-       }
-     }
+        success: true,
+        message: "Kino fayli muvaffaqiyatli yuklandi",
+        data: {
+          id: newFile.id,
+          movie_id: newFile.movie_id,
+          quality: newFile.quality,
+          language: newFile.language,
+          file_url: newFile.file_url
+        }
+      };
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 }

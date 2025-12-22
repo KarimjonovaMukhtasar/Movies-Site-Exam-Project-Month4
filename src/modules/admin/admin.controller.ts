@@ -141,23 +141,32 @@ export class AdminController {
     required: true       
   })
   @Post(':movie_id/files')
-  @UseInterceptors(
-    FileInterceptor("file_url", {
-      storage: multer.memoryStorage(),
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(mp4|mkv|webm|mov)$/)) {
-          return cb(
-            new BadRequestException("Only video files are allowed!"),
-            false
-          );
-        }
-        cb(null, true);
-      },
-      limits: { fileSize: 500 * 1024 * 1024 }
-    })
-  )
+ @UseInterceptors(
+  FileInterceptor("file_url", {
+    storage: multer.memoryStorage(),
+    fileFilter: (req, file, cb) => {
+      const allowedMimeTypes = [
+        "video/mp4",
+        "video/x-matroska",
+        "video/webm",
+        "video/quicktime",
+      ];
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        return cb(
+          new BadRequestException(
+            `Invalid file type (${file.mimetype}). Only video files are allowed!`,
+          ),
+          false,
+        );
+      }
+
+      cb(null, true);
+    },
+    limits: { fileSize: 500 * 1024 * 1024 },
+  }),
+)
   uploadFile(
-    @Param() movie_id: string,
+    @Param('movie_id') movie_id: string,
     @UploadedFile() file_url: Express.Multer.File,
     @Body() uploadFileDto: UploadFileDto
   ) {

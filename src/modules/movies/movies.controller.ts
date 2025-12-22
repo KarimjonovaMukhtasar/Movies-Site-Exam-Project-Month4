@@ -11,7 +11,7 @@ import {
   Req
 } from "@nestjs/common";
 import { MoviesService } from "./movies.service";
-import { ApiOperation, ApiQuery, ApiSecurity } from "@nestjs/swagger";
+import { ApiOperation, ApiParam, ApiQuery, ApiSecurity } from "@nestjs/swagger";
 import { AuthGuard } from "src/guards/auth.guard";
 
 @Controller("movies")
@@ -26,7 +26,7 @@ export class MoviesController {
   @ApiQuery({ name: "search", required: false, type: Number })
   @ApiQuery({ name: "category", required: false, type: String })
   @ApiQuery({ name: "subscription_type", required: false, type: String })
-  @Get("plans")
+  @Get()
   findAll(
     @Query("page") page?: number,
     @Query("limit") limit?: number,
@@ -39,10 +39,19 @@ export class MoviesController {
       limit,
       search,
       category,
-      subscription_type
+      subscription_type,
     );
   }
 
+  @ApiSecurity("cookie-auth-key")
+    @UseGuards(AuthGuard)
+    @ApiOperation({ summary: "{ USER, ADMIN, SUPERADMIN}" })
+    @ApiParam({
+      name: 'slug',   
+      type: String,   
+      description: 'MOVIE SLUG',
+      required: true       
+    })
   @Get(":slug")
   findOne(@Param("slug") slug: string, @Req() req: Request) {
     return this.moviesService.findOne(slug, req);

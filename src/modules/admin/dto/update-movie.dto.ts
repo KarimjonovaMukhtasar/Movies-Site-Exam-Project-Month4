@@ -3,68 +3,65 @@ import { SubscriptionType } from "@prisma/client";
 import { Transform } from "class-transformer";
 import {
   IsEnum,
-  IsNumber,
+  IsInt,
   IsOptional,
-  IsPositive,
   IsString,
   Max,
   Min,
 } from "class-validator";
 
+const toOptionalNumber = ({ value }) => {
+  if (value === undefined || value === null || value === "" || value === "undefined") {
+    return undefined;
+  }
+  const num = Number(value);
+  return isNaN(num) ? undefined : num;
+};
+
 export class UpdateMovieDto {
-  @ApiProperty({ type: "string", required: true, example: "Qasoskorlar" })
-  @IsString()
+  @ApiProperty({ required: false, example: "Qasoskorlar" })
   @IsOptional()
-  @Transform(({ value }) => (value === "" ? undefined : value))
-  title: string;
-
-  @ApiProperty({
-    type: "string",
-    required: true,
-    example: "AJOYIB FANTASTIK KINO"
-  })
   @IsString()
- @IsOptional()
-   @Transform(({ value }) => (value === "" ? undefined : value))
-  description: string;
+  title?: string;
 
-  @ApiProperty({ type: "number", required: true, example: "2025" })
-  @IsNumber()
-  @IsPositive()
+  @ApiProperty({ required: false, example: "AJOYIB FANTASTIK KINO" })
   @IsOptional()
-  @Transform(({ value }) => (value === "" ? undefined : value))
-  release_year: number;
+  @IsString()
+  description?: string;
 
-  @ApiProperty({ type: "number", required: true, example: "120" })
-  @IsNumber()
-  @IsPositive()
- @IsOptional()
-   @Transform(({ value }) => (value === "" ? undefined : value))
-  duration_minutes: number;
+  @ApiProperty({ required: false, example: 2025 })
+  @IsOptional()
+  @Transform(toOptionalNumber)
+  @IsInt()
+  @Min(1)
+  release_year?: number;
 
-  @ApiProperty({ type: "number", required: true, example: "5" })
-  @IsNumber()
-  @IsPositive()
+  @ApiProperty({ required: false, example: 120 })
+  @IsOptional()
+  @Transform(toOptionalNumber)
+  @IsInt()
+  @Min(1)
+  duration_minutes?: number;
+
+  @ApiProperty({ required: false, example: 5 })
+  @IsOptional()
+  @Transform(toOptionalNumber)
+  @IsInt()
   @Min(1)
   @Max(5)
+  rating?: number;
+
+  @ApiProperty({ required: false, example: "free" })
   @IsOptional()
   @Transform(({ value }) => (value === "" ? undefined : value))
-  rating: number;
-
-  @ApiProperty({ type: "string", required: true, example: "free" })
   @IsEnum(SubscriptionType)
-  @IsOptional()
-  @Transform(({ value }) => (value === "" ? undefined : value))
-  subscription_type: SubscriptionType;
+  subscription_type?: SubscriptionType;
 
-  @ApiProperty({
+   @ApiProperty({
     type: "string",
     required: true,
     format: "binary",
     example: "avatar.jpeg"
   })
-  @IsOptional()
-@Transform(({ value }) => (value === "" ? undefined : value))
-  poster_url: any;
+  poster_url?: any;
 }
-

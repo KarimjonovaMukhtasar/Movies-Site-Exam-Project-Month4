@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { SubscriptionType } from "@prisma/client";
+import { Type } from "class-transformer";
 import {
   IsEnum,
   IsNotEmpty,
@@ -26,18 +27,19 @@ export class CreateMovieDto {
   description: string;
 
   @ApiProperty({ type: "number", required: true, example: "2025" })
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  @IsNotEmpty()
   release_year: number;
 
   @ApiProperty({ type: "number", required: true, example: "120" })
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  @IsNotEmpty()
   duration_minutes: number;
 
   @ApiProperty({ type: "number", required: true, example: "5" })
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
   @Min(1)
