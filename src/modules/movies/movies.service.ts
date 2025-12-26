@@ -42,6 +42,7 @@ export class MoviesService {
       };
     }
     where.status = 'active'
+    where.subscription_type = 'free'
     const [data, total] = await Promise.all([
       this.prisma.movies.findMany({
         where,
@@ -85,7 +86,7 @@ export class MoviesService {
   async findOne(slug: string, req: Request) {
     try {
     const user_id = req['user'].id
-    const movie= await this.prisma.movies.findUnique({where: {slug}, include: {
+    const movie = await this.prisma.movies.findUnique({where: {slug, status: 'active'}, include: {
       movie_categories: {
         select: {
           categories: {select: {name: true}}
