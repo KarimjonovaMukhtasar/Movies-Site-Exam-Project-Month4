@@ -1,34 +1,40 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
+import { ApiOperation, ApiParam, ApiSecurity } from '@nestjs/swagger';
+import { AuthGuard } from 'src/guards/auth.guard';
 
-@Controller('reviews')
+@Controller('movies')
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
-  @Post()
-  create(@Body() createReviewDto: CreateReviewDto) {
-    return this.reviewsService.create(createReviewDto);
-  }
+  @ApiSecurity("cookie-auth-key")
+    @UseGuards(AuthGuard)
+    @ApiOperation({ summary: "{ USER, ADMIN, SUPERADMIN}" })
+    @ApiParam({
+      name: "movie_id",
+      type: String,
+      description: "MOVIE ID",
+      required: true
+    })
+    @Post(`:movie_id/reviews`)
+    create(@Param("movie_id") movie_id: string, @Req() req: Request, @Body() payload: CreateReviewDto) {
+      return this.reviewsService.create(movie_id, req, payload);
+    }
 
-  @Get()
-  findAll() {
-    return this.reviewsService.findAll();
-  }
+ 
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reviewsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
-    return this.reviewsService.update(+id, updateReviewDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reviewsService.remove(+id);
+  @ApiSecurity("cookie-auth-key")
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: "{ USER, ADMIN, SUPERADMIN}" })
+  @ApiParam({
+    name: "movie_id",
+    type: String,
+    description: "MOVIE ID",
+    required: true
+  })
+  @Delete(":movie_id/reviews/:review_id")
+  remove(@Param("movie_id") movie_id: string, @Param("review_id") review_id: string, @Req() req: Request) {
+    return this.reviewsService.remove(movie_id, review_id, req);
   }
 }
